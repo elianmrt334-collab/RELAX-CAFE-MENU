@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relax Café - Admin de Menú</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    // Evitar conflictos si se carga en un entorno de Node/Electron
+    window.tempModule = window.module;
+    window.module = undefined;
+  </script>
+  <script src="lucide.min.js"></script>
+  <script>
+    window.module = window.tempModule;
+    delete window.tempModule;
+  </script>
+  <style>
+    :root {
+      --bg-beige: #FAF6F0;
+      --card-bg: #FFFFFF;
+      --text-dark: #362820;
+      --text-muted: #7E6B5F;
+      --accent-brown: #5C4A3F;
+      --accent-brown-light: #7A6659;
+      --accent-yellow: #D4A373;
+      --accent-yellow-light: #F4EAD4;
+      --border-color: #E6DFD5;
+      --danger: #D9534F;
+      --danger-hover: #C9302C;
+      --success: #2A9D8F;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+    body {
+      background-color: var(--bg-beige);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    /* HEADER */
+    header {
+      background-color: var(--card-bg);
+      border-bottom: 2px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 12px rgba(86, 68, 56, 0.04);
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .header-logo {
+      height: 50px;
+      width: 50px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+    .header-title h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent-brown);
+      letter-spacing: 0.5px;
+    }
+    .header-title p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .btn-view-dashboard {
+      background-color: var(--accent-yellow-light);
+      color: var(--accent-brown);
+      border: 1px solid rgba(212, 163, 115, 0.4);
+      padding: 0.6rem 1.2rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+    .btn-view-dashboard:hover {
+      background-color: var(--accent-yellow);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(212, 163, 115, 0.2);
+    }
+    /* CONTENEDOR PRINCIPAL */
+    .main-container {
+      max-width: 1280px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 2rem;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 2rem;
+      flex-grow: 1;
+    }
+    /* BANNER ALERTA / ESTADO DE CONEXION */
+    .status-banner {
+      grid-column: 1 / -1;
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .status-banner.error {
+      background-color: #F8D7DA;
+      color: #721C24;
+      border: 1px solid #F5C6CB;
+    }
+    .status-banner.success {
+      background-color: #D4EDDA;
+      color: #155724;
+      border: 1px solid #C3E6CB;
+    }
+    /* TARJETAS */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 1.8rem;
+      box-shadow: 0 4px 20px rgba(86, 68, 56, 0.03);
+      display: flex;
+      flex-direction: column;
+      height: fit-content;
+    }
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--accent-brown);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--bg-beige);
+      padding-bottom: 0.75rem;
+    }
+    /* FORMULARIO */
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .form-control {
+      width: 100%;
+      background-color: var(--bg-beige);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      color: var(--text-dark);
+      font-weight: 500;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    .form-control:focus {
+      border-color: var(--accent-yellow);
+      background-color: white;
+      box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.15);
+    }
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .btn-submit {
+      width: 100%;
+      background-color: var(--accent-brown);
+      color: white;
+      border: none;
+      padding: 0.85rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 1rem;
+    }
+    .btn-submit:hover {
+      background-color: var(--accent-brown-light);
+      box-shadow: 0 4px 15px rgba(92, 74, 63, 0.25);
+    }
+    .btn-cancel-edit {
+      width: 100%;
+      background-color: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      padding: 0.7rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
+      margin-top: 0.5rem;
+    }
+    .btn-cancel-edit:hover {
+      background-color: var(--bg-beige);
+      color: var(--text-dark);
+    }
+    /* LISTADO Y TABLA */
+    .list-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-box {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg-beige);
+      padding: 0.4rem 0.8rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+    }
+    .filter-box select {
+      background: transparent;
+      border: none;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent-brown);
+      outline: none;
+      cursor: pointer;
+    }
+    .table-responsive {
+      width: 100%;
+      overflow-x: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+    th {
+      font-weight: 700;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      padding: 0.85rem 1rem;
+      border-bottom: 2px solid var(--border-color);
+    }
+    td {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.95rem;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:hover td {
+      background-color: var(--bg-beige);
+    }
+    .badge-category {
+      background-color: var(--accent-yellow-light);
+      color: var(--accent-brown);
+      padding: 0.25rem 0.6rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-block;
+      text-transform: uppercase;
+    }
+    .item-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-icon:hover {
+      border-color: var(--accent-yellow);
+      color: var(--accent-brown);
+      background-color: var(--accent-yellow-light);
+    }
+    .btn-icon.delete:hover {
+      border-color: var(--danger);
+      color: white;
+      background-color: var(--danger);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+    .empty-state i {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+    @media (max-width: 900px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- ENCABEZADO -->
+  <header>
+    <div class="header-brand">
+      <img src="logo.jpg" alt="Relax Café Logo" class="header-logo" onerror="this.src='https://via.placeholder.com/150/4A3B32/FFFFFF?text=Relax+Caf%C3%A9'">
+      <div class="header-title">
+        <h1>Administrador de Menú</h1>
+        <p>Relax Café • Esquipulas</p>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <a href="dashboard.html" class="btn-view-dashboard" target="_blank">
+        <i data-lucide="external-link"></i>
+        Ver Menú / Impresión
+      </a>
+    </div>
+  </header>
+  <!-- CONTENEDOR DE LA APLICACIÓN -->
+  <div class="main-container">
+    
+    <!-- BANNER DE ESTADO -->
+    <div id="statusBanner" class="status-banner" style="display: none;">
+      <i id="statusIcon" data-lucide="wifi"></i>
+      <span id="statusMessage">Cargando base de datos...</span>
+    </div>
+    <!-- COLUMNA IZQUIERDA: FORMULARIO -->
+    <div class="card">
+      <h2 id="formTitle" class="card-title">
+        <i data-lucide="plus-circle"></i>
+        Nuevo Platillo/Bebida
+      </h2>
+      
+      <form id="menuForm">
+        <input type="hidden" id="editItemId">
+        <div class="form-group">
+          <label for="itemName">Nombre del Elemento</label>
+          <input type="text" id="itemName" class="form-control" placeholder="Ej. Desayuno Típico, Cappuccino" required>
+        </div>
+        <div class="form-group">
+          <label for="itemPrice">Precio (Q)</label>
+          <input type="number" id="itemPrice" class="form-control" placeholder="0.00" step="0.01" required min="0">
+        </div>
+        <div class="form-group">
+          <label for="itemCategory">Clasificación / Categoría</label>
+          <select id="itemCategory" class="form-control" required>
+            <option value="" disabled selected>Selecciona una opción</option>
+            <option value="DESAYUNO">DESAYUNO</option>
+            <option value="ALMUERZO">ALMUERZO</option>
+            <option value="CENA">CENA</option>
+            <option value="COMIDA DE TEMPORADA">COMIDA DE TEMPORADA</option>
+            <option value="BEBIDAS CALIENTES">BEBIDAS CALIENTES</option>
+            <option value="BEBIDAS FRÍAS">BEBIDAS FRÍAS</option>
+            <option value="BEBIDAS DE TEMPORADA">BEBIDAS DE TEMPORADA</option>
+            <option value="POSTRES">POSTRES</option>
+            <option value="REFACCIONES">REFACCIONES</option>
+            <option value="HELADOS">HELADOS</option>
+            <option value="HELADOS DE TEMPORADA">HELADOS DE TEMPORADA</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="itemDetails">Detalles / Descripción</label>
+          <textarea id="itemDetails" class="form-control" placeholder="Detalle de ingredientes, porción, etc."></textarea>
+        </div>
+        <button type="submit" id="btnSubmit" class="btn-submit">
+          <i data-lucide="save"></i>
+          <span>Guardar Elemento</span>
+        </button>
+        
+        <button type="button" id="btnCancelEdit" class="btn-cancel-edit" style="display: none;">
+          Cancelar Edición
+        </button>
+      </form>
+    </div>
+    <!-- COLUMNA DERECHA: TABLA / LISTADO -->
+    <div class="card" style="width: 100%;">
+      <div class="list-header">
+        <h2 class="card-title" style="margin-bottom: 0; border: none; padding: 0;">
+          <i data-lucide="list"></i>
+          Elementos del Menú
+        </h2>
+        
+        <!-- FILTRO DE CATEGORIAS -->
+        <div class="filter-box">
+          <i data-lucide="filter" style="width: 16px; height: 16px; color: var(--text-muted);"></i>
+          <select id="filterCategory">
+            <option value="ALL">TODAS LAS CATEGORÍAS</option>
+            <option value="DESAYUNO">DESAYUNO</option>
+            <option value="ALMUERZO">ALMUERZO</option>
+            <option value="CENA">CENA</option>
+            <option value="COMIDA DE TEMPORADA">COMIDA DE TEMPORADA</option>
+            <option value="BEBIDAS CALIENTES">BEBIDAS CALIENTES</option>
+            <option value="BEBIDAS FRÍAS">BEBIDAS FRÍAS</option>
+            <option value="BEBIDAS DE TEMPORADA">BEBIDAS DE TEMPORADA</option>
+            <option value="POSTRES">POSTRES</option>
+            <option value="REFACCIONES">REFACCIONES</option>
+            <option value="HELADOS">HELADOS</option>
+            <option value="HELADOS DE TEMPORADA">HELADOS DE TEMPORADA</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table id="itemsTable">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Categoría</th>
+              <th>Precio</th>
+              <th>Detalles</th>
+              <th style="text-align: right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="itemsTableBody">
+            <!-- Carga dinámica -->
+          </tbody>
+        </table>
+        
+        <div id="emptyState" class="empty-state" style="display: none;">
+          <i data-lucide="inbox"></i>
+          <p>No se encontraron elementos en el menú.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- CONFIGURACIÓN Y LÓGICA DE FIREBASE -->
+  <script src="firebase-config.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    // Inicializar iconos
+    lucide.createIcons();
+    // DOM Elements
+    const statusBanner = document.getElementById('statusBanner');
+    const statusIcon = document.getElementById('statusIcon');
+    const statusMessage = document.getElementById('statusMessage');
+    const menuForm = document.getElementById('menuForm');
+    const editItemIdInput = document.getElementById('editItemId');
+    const itemNameInput = document.getElementById('itemName');
+    const itemPriceInput = document.getElementById('itemPrice');
+    const itemCategoryInput = document.getElementById('itemCategory');
+    const itemDetailsInput = document.getElementById('itemDetails');
+    const formTitle = document.getElementById('formTitle');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const btnCancelEdit = document.getElementById('btnCancelEdit');
+    const itemsTableBody = document.getElementById('itemsTableBody');
+    const filterCategory = document.getElementById('filterCategory');
+    const emptyState = document.getElementById('emptyState');
+    let db;
+    let allMenuItems = [];
+    let isEditing = false;
+    // Mostrar banner de estado
+    function showBanner(message, type) {
+      statusBanner.style.display = 'flex';
+      statusMessage.textContent = message;
+      if (type === 'error') {
+        statusBanner.className = 'status-banner error';
+        statusIcon.setAttribute('data-lucide', 'wifi-off');
+      } else {
+        statusBanner.className = 'status-banner success';
+        statusIcon.setAttribute('data-lucide', 'check-circle');
+      }
+      lucide.createIcons();
+    }
+    // Inicialización
+    try {
+      const config = window.CLOUD_CONFIG;
+      if (!config || !config.firebase) {
+        throw new Error("No se encontró la configuración de Firebase.");
+      }
+      const app = initializeApp(config.firebase);
+      db = getFirestore(app);
+      const auth = getAuth(app);
+      // Autenticar de forma anónima
+      signInAnonymously(auth)
+        .then(() => {
+          showBanner("Conexión con Firebase establecida.", "success");
+          startMenuListener();
+        })
+        .catch(err => {
+          showBanner("Error al autenticar: " + err.message + ". Asegúrate de activar Anonymous Auth en Firebase.", "error");
+        });
+    } catch (err) {
+      showBanner("Error en configuración: " + err.message, "error");
+    }
+    // Escuchar cambios de Firestore
+    function startMenuListener() {
+      onSnapshot(collection(db, "restaurant_web_menu"), (snapshot) => {
+        allMenuItems = [];
+        snapshot.forEach(doc => {
+          allMenuItems.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // Ordenar por categoría y luego por nombre
+        allMenuItems.sort((a, b) => {
+          if (a.category !== b.category) {
+            return a.category.localeCompare(b.category);
+          }
+          return a.name.localeCompare(b.name);
+        });
+        renderTable();
+      }, (error) => {
+        showBanner("Error de base de datos: " + error.message + ". Verifica las reglas de Firestore.", "error");
+      });
+    }
+    // Renderizar listado/tabla
+    function renderTable() {
+      const activeFilter = filterCategory.value;
+      const filtered = activeFilter === 'ALL' 
+        ? allMenuItems 
+        : allMenuItems.filter(item => item.category === activeFilter);
+      itemsTableBody.innerHTML = '';
+      
+      if (filtered.length === 0) {
+        emptyState.style.display = 'block';
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      filtered.forEach(item => {
+        const tr = document.createElement('tr');
+        
+        tr.innerHTML = `
+          <td style="font-weight: 600; color: var(--text-dark);">${escapeHtml(item.name)}</td>
+          <td><span class="badge-category">${escapeHtml(item.category)}</span></td>
+          <td style="font-weight: 700; color: var(--accent-brown);">Q${parseFloat(item.price).toFixed(2)}</td>
+          <td style="color: var(--text-muted); max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(item.details || '')}">
+            ${escapeHtml(item.details || 'Sin descripción')}
+          </td>
+          <td>
+            <div class="item-actions" style="justify-content: flex-end;">
+              <button class="btn-icon edit-btn" data-id="${item.id}">
+                <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
+              </button>
+              <button class="btn-icon delete delete-btn" data-id="${item.id}">
+                <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        itemsTableBody.appendChild(tr);
+      });
+      // Adjuntar eventos a botones
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          loadItemToForm(id);
+        });
+      });
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          deleteItem(id);
+        });
+      });
+      lucide.createIcons();
+    }
+    // Cargar elemento para edición
+    function loadItemToForm(id) {
+      const item = allMenuItems.find(i => i.id === id);
+      if (!item) return;
+      isEditing = true;
+      editItemIdInput.value = item.id;
+      itemNameInput.value = item.name;
+      itemPriceInput.value = item.price;
+      itemCategoryInput.value = item.category;
+      itemDetailsInput.value = item.details || '';
+      formTitle.innerHTML = `<i data-lucide="edit-3"></i> Editar Elemento`;
+      btnSubmit.innerHTML = `<i data-lucide="save"></i> Guardar Cambios`;
+      btnCancelEdit.style.display = 'block';
+      
+      // Hacer scroll hasta el formulario en celulares
+      document.getElementById('formTitle').scrollIntoView({ behavior: 'smooth' });
+      lucide.createIcons();
+    }
+    // Cancelar edición
+    function resetForm() {
+      isEditing = false;
+      editItemIdInput.value = '';
+      itemNameInput.value = '';
+      itemPriceInput.value = '';
+      itemCategoryInput.value = '';
+      itemDetailsInput.value = '';
+      formTitle.innerHTML = `<i data-lucide="plus-circle"></i> Nuevo Platillo/Bebida`;
+      btnSubmit.innerHTML = `<i data-lucide="save"></i> Guardar Elemento`;
+      btnCancelEdit.style.display = 'none';
+      lucide.createIcons();
+    }
+    btnCancelEdit.addEventListener('click', resetForm);
+    // Guardar / Actualizar
+    menuForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const name = itemNameInput.value.trim();
+      const price = parseFloat(itemPriceInput.value);
+      const category = itemCategoryInput.value;
+      const details = itemDetailsInput.value.trim();
+      if (!name || isNaN(price) || !category) {
+        showBanner("Por favor rellena los campos obligatorios.", "error");
+        return;
+      }
+      const itemData = {
+        name,
+        price,
+        category,
+        details,
+        timestamp: Date.now()
+      };
+      try {
+        if (isEditing) {
+          const id = editItemIdInput.value;
+          const docRef = doc(db, "restaurant_web_menu", id);
+          await updateDoc(docRef, itemData);
+          showBanner("Elemento actualizado correctamente.", "success");
+        } else {
+          const colRef = collection(db, "restaurant_web_menu");
+          await addDoc(colRef, itemData);
+          showBanner("Elemento guardado correctamente.", "success");
+        }
+        resetForm();
+      } catch (err) {
+        showBanner("Error al guardar: " + err.message, "error");
+      }
+    });
+    // Eliminar elemento
+    async function deleteItem(id) {
+      if (!confirm("¿Estás seguro de que deseas eliminar este elemento?")) return;
+      
+      try {
+        const docRef = doc(db, "restaurant_web_menu", id);
+        await deleteDoc(docRef);
+        showBanner("Elemento eliminado de la base de datos.", "success");
+        if (isEditing && editItemIdInput.value === id) {
+          resetForm();
+        }
+      } catch (err) {
+        showBanner("Error al eliminar: " + err.message, "error");
+      }
+    }
+    // Escuchar cambios de filtro
+    filterCategory.addEventListener('change', renderTable);
+    // Helper para escapar HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+  </script>
+</body>
+</html>

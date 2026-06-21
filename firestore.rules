@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Reglas de seguridad para la colección del menú de Relax Café
+    match /restaurant_web_menu/{document} {
+      // Cualquiera puede leer los platillos (clientes que visitan el dashboard)
+      allow read: if true;
+      
+      // Solo usuarios autenticados pueden crear, editar o borrar platillos (el admin)
+      allow write: if request.auth != null;
+    }
+  }
+}

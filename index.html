@@ -528,26 +528,27 @@
     } catch (err) {
       showBanner("Error en configuración: " + err.message, "error");
     }
-    // Escuchar cambios de Firestore
-    function startMenuListener() {
-      onSnapshot(collection(db, "restaurant_web_menu"), (snapshot) => {
-        allMenuItems = [];
-        snapshot.forEach(doc => {
-          allMenuItems.push({ id: doc.id, ...doc.data() });
-        });
-        
-        // Ordenar por categoría y luego por nombre
-        allMenuItems.sort((a, b) => {
-          if (a.category !== b.category) {
-            return a.category.localeCompare(b.category);
-          }
-          return a.name.localeCompare(b.name);
-        });
-        renderTable();
-      }, (error) => {
-        showBanner("Error de base de datos: " + error.message + ". Verifica las reglas de Firestore.", "error");
-      });
-    }
+    // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBZy-b5MvaIEA2pT_h5emnu930NlcRaIjo",
+  authDomain: "relax-cafe-ba41c.firebaseapp.com",
+  projectId: "relax-cafe-ba41c",
+  storageBucket: "relax-cafe-ba41c.firebasestorage.app",
+  messagingSenderId: "886660194160",
+  appId: "1:886660194160:web:5aa9de0992ef49226cf9b5",
+  measurementId: "G-7LXQFMQKJ0"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
     // Renderizar listado/tabla
     function renderTable() {
       const activeFilter = filterCategory.value;

@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relax Café - Menú Digital y Físico</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>
+    // Evitar conflictos con Node/Electron
+    window.tempModule = window.module;
+    window.module = undefined;
+  </script>
+  <script src="lucide.min.js"></script>
+  <script>
+    window.module = window.tempModule;
+    delete window.tempModule;
+  </script>
+  <style>
+    :root {
+      --bg-beige: #FAF6F0;
+      --card-bg: #FFFFFF;
+      --text-dark: #362820;
+      --text-muted: #7E6B5F;
+      --accent-brown: #5C4A3F;
+      --accent-yellow: #D4A373;
+      --accent-yellow-light: #F4EAD4;
+      --border-color: #E6DFD5;
+      --shadow: 0 4px 15px rgba(86, 68, 56, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-beige);
+      color: var(--text-dark);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* BARRA DE HERRAMIENTAS (PANTALLA) */
+    .control-bar {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.8rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #ccc;
+    }
+
+    .status-dot.connected {
+      background-color: #2A9D8F;
+      box-shadow: 0 0 8px #2A9D8F;
+    }
+
+    .status-dot.error {
+      background-color: #D9534F;
+      box-shadow: 0 0 8px #D9534F;
+    }
+
+    .btn-print {
+      background-color: var(--accent-brown);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-print:hover {
+      background-color: var(--accent-yellow);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(212, 163, 115, 0.2);
+    }
+
+    /* ENCABEZADO DEL MENÚ */
+    .menu-header {
+      text-align: center;
+      margin: 2.5rem auto 1.5rem auto;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .menu-logo {
+      height: 120px;
+      width: 120px;
+      object-fit: cover;
+      border-radius: 24px;
+      border: 3px solid white;
+      box-shadow: 0 8px 24px rgba(86, 68, 56, 0.1);
+      margin-bottom: 1.2rem;
+      transition: transform 0.3s ease;
+    }
+
+    .menu-logo:hover {
+      transform: scale(1.05);
+    }
+
+    .menu-brand-title {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--accent-brown);
+      letter-spacing: 1px;
+      margin-bottom: 0.2rem;
+      text-transform: uppercase;
+    }
+
+    .menu-subtitle {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--accent-yellow);
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      margin-bottom: 1rem;
+    }
+
+    .menu-divider {
+      width: 60px;
+      height: 3px;
+      background-color: var(--accent-yellow);
+      border-radius: 2px;
+      margin-bottom: 1.5rem;
+    }
+
+    /* CONTENEDOR DE CATEGORÍAS */
+    .menu-content {
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 0 2rem 4rem 2rem;
+    }
+
+    /* DISEÑO DE GRID DE TARJETAS EN PANTALLA */
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 2rem;
+    }
+
+    .category-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 1.8rem;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+    }
+
+    .category-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(212, 163, 115, 0.4);
+      box-shadow: 0 10px 25px rgba(86, 68, 56, 0.07);
+    }
+
+    .category-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--accent-brown);
+      border-bottom: 2px solid var(--bg-beige);
+      padding-bottom: 0.6rem;
+      margin-bottom: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .category-title i {
+      color: var(--accent-yellow);
+    }
+
+    /* FILA DE PRODUCTO EN PANTALLA */
+    .product-item {
+      margin-bottom: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .subcategory-title {
+      font-size: 0.95rem;
+      font-weight: 750;
+      color: var(--accent-yellow);
+      margin: 1.2rem 0 0.6rem 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 1px dashed var(--border-color);
+      padding-bottom: 0.25rem;
+    }
+    
+    .products-list > .subcategory-title:first-child {
+      margin-top: 0;
+    }
+
+    .product-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+    }
+
+    .product-name {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-dark);
+    }
+
+    .product-price {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--accent-brown);
+      white-space: nowrap;
+    }
+
+    .product-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* DISEÑO FÍSICO INVISIBLE EN PANTALLA */
+    #printLayout {
+      display: none;
+    }
+
+    /* ESTILOS DE IMPRESIÓN (DASHBOARD A MENÚ FÍSICO) */
+    @media print {
+      /* Resetear elementos web */
+      .no-print, .control-bar {
+        display: none !important;
+      }
+
+      body {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        min-height: auto;
+      }
+
+      .menu-header {
+        margin-top: 0 !important;
+        margin-bottom: 2rem !important;
+        page-break-inside: avoid;
+      }
+
+      .menu-logo {
+        height: 90px !important;
+        width: 90px !important;
+        border-radius: 12px !important;
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+      }
+
+      .menu-brand-title {
+        font-size: 1.8rem !important;
+        color: #000 !important;
+      }
+
+      .menu-subtitle {
+        font-size: 0.8rem !important;
+        color: #000 !important;
+      }
+
+      .menu-divider {
+        background-color: #000 !important;
+      }
+
+      /* Mostrar estructura de impresión exclusiva */
+      .menu-content {
+        display: none !important; /* Ocultar grid de pantalla */
+      }
+
+      #printLayout {
+        display: block !important;
+        width: 100%;
+        padding: 0 10mm;
+      }
+
+      /* Dos columnas para menú físico */
+      .print-columns {
+        column-count: 2;
+        column-gap: 1.8in;
+        width: 100%;
+      }
+
+      .print-category-section {
+        break-inside: avoid;
+        margin-bottom: 2.2rem;
+      }
+
+      .print-category-title {
+        font-size: 1.1rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        border-bottom: 2px solid #000;
+        padding-bottom: 0.35rem;
+        margin-bottom: 0.85rem;
+        letter-spacing: 1px;
+      }
+
+      .print-item {
+        margin-bottom: 0.85rem;
+        break-inside: avoid;
+      }
+
+      /* LÍNEAS DE GUÍA DE PUNTOS (LEADERS) PARA MENÚ FÍSICO */
+      .print-item-header {
+        display: flex;
+        align-items: baseline;
+        width: 100%;
+      }
+
+      .print-item-name {
+        font-weight: bold;
+        font-size: 0.95rem;
+        white-space: nowrap;
+      }
+
+      .print-item-leader {
+        flex-grow: 1;
+        border-bottom: 1.5px dotted #000;
+        margin: 0 8px;
+      }
+
+      .print-item-price {
+        font-weight: bold;
+        font-size: 0.95rem;
+        white-space: nowrap;
+      }
+
+      .print-item-desc {
+        font-size: 0.75rem;
+        color: #333;
+        line-height: 1.3;
+        margin-top: 0.15rem;
+      }
+
+      .print-subcategory-title {
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        margin-top: 0.7rem;
+        margin-bottom: 0.4rem;
+        color: #000;
+        letter-spacing: 0.5px;
+        border-bottom: 1.5px dashed #000;
+        padding-bottom: 0.1rem;
+      }
+
+      .print-items-list > .print-subcategory-title:first-child {
+        margin-top: 0;
+      }
+    }
+
+    /* ESTILOS DE EDICIÓN NATIVOS */
+    :root {
+      --danger: #D9534F;
+      --danger-hover: #C9302C;
+      --success: #2A9D8F;
+    }
+
+    .edit-only {
+      display: none !important;
+    }
+
+    body.edit-mode .edit-only.flex-btn {
+      display: inline-flex !important;
+    }
+
+    body.edit-mode .edit-only.block {
+      display: block !important;
+    }
+
+    body.edit-mode .edit-only.inline {
+      display: inline-flex !important;
+    }
+
+    /* Botón de edición en barra superior */
+    .btn-edit-toggle {
+      background-color: var(--accent-yellow-light);
+      color: var(--accent-brown);
+      border: 1px solid rgba(212, 163, 115, 0.4);
+      padding: 0.6rem 1.2rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-edit-toggle:hover {
+      background-color: var(--accent-yellow);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(212, 163, 115, 0.2);
+    }
+
+    body.edit-mode .btn-edit-toggle {
+      background-color: #E6DFD5;
+      color: var(--text-dark);
+      border-color: var(--text-muted);
+    }
+
+    .btn-add-new-global {
+      background-color: var(--success);
+      color: white;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-add-new-global:hover {
+      background-color: #228074;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(42, 157, 143, 0.2);
+    }
+
+    /* Estilos de las tarjetas de producto en modo edición */
+    body.edit-mode .product-item {
+      border: 1px dashed var(--border-color);
+      padding: 0.8rem;
+      border-radius: 12px;
+      background-color: var(--bg-beige);
+      position: relative;
+      cursor: grab;
+      transition: background-color 0.2s ease;
+    }
+
+    body.edit-mode .product-item:hover {
+      background-color: var(--accent-yellow-light);
+      border-color: var(--accent-yellow);
+    }
+
+    body.edit-mode .product-item.dragging {
+      opacity: 0.5;
+      border: 2px dashed var(--accent-yellow);
+    }
+
+    .drag-handle {
+      cursor: grab;
+      margin-right: 0.5rem;
+      align-items: center;
+    }
+
+    .product-actions {
+      display: inline-flex;
+      gap: 3px;
+      margin-left: 0.5rem;
+    }
+
+    .btn-action {
+      background: white;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+    }
+
+    .btn-action:hover {
+      background-color: var(--accent-yellow-light);
+      border-color: var(--accent-yellow);
+      color: var(--accent-brown);
+    }
+
+    .btn-action.delete-btn:hover {
+      background-color: var(--danger);
+      color: white;
+      border-color: var(--danger);
+    }
+
+    .btn-add-item-category {
+      background-color: transparent;
+      color: var(--accent-brown);
+      border: 1px dashed var(--accent-brown);
+      padding: 0.5rem 1rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s ease;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .btn-add-item-category:hover {
+      background-color: var(--accent-yellow-light);
+      border-color: var(--accent-yellow);
+      color: var(--accent-brown);
+    }
+
+    /* MODAL DE EDICIÓN */
+    .admin-dialog {
+      border: none;
+      border-radius: 20px;
+      background-color: var(--card-bg);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      max-width: 480px;
+      width: 90%;
+      padding: 0;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      outline: none;
+      overflow: hidden;
+    }
+
+    .admin-dialog::backdrop {
+      background-color: rgba(54, 40, 32, 0.4);
+      backdrop-filter: blur(4px);
+    }
+
+    .dialog-content {
+      padding: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--bg-beige);
+      padding-bottom: 0.75rem;
+    }
+
+    .dialog-header h2 {
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--accent-brown);
+    }
+
+    .btn-close-dialog {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+
+    .btn-close-dialog:hover {
+      background-color: var(--bg-beige);
+      color: var(--text-dark);
+    }
+
+    .form-group {
+      margin-bottom: 1.2rem;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      background-color: var(--bg-beige);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      font-size: 0.95rem;
+      color: var(--text-dark);
+      font-weight: 500;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent-yellow);
+      background-color: white;
+      box-shadow: 0 0 0 3px rgba(212, 163, 115, 0.15);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background-color: var(--accent-brown);
+      color: white;
+      border: none;
+      padding: 0.85rem;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 1rem;
+    }
+
+    .btn-submit:hover {
+      background-color: var(--accent-brown-light, #7A6659);
+      box-shadow: 0 4px 15px rgba(92, 74, 63, 0.25);
+    }
+
+    @media print {
+      .edit-only, .admin-dialog, dialog {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA DE CONTROL SUPERIOR (SOLO EN PANTALLA) -->
+  <div class="control-bar no-print">
+    <div class="status-indicator">
+      <div id="statusDot" class="status-dot"></div>
+      <span id="statusText">Conectando...</span>
+    </div>
+    
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+      <!-- Botón Editar Menú -->
+      <button id="btnEditToggle" class="btn-edit-toggle">
+        <i data-lucide="lock"></i>
+        <span>Editar Menú</span>
+      </button>
+
+      <!-- Botón Nuevo Platillo (Global, solo edicion) -->
+      <button id="btnAddNewGlobal" class="btn-add-new-global edit-only flex-btn">
+        <i data-lucide="plus"></i>
+        <span>Nuevo Platillo</span>
+      </button>
+
+      <button id="btnPrint" class="btn-print">
+        <i data-lucide="printer"></i>
+        Imprimir Menú (Físico)
+      </button>
+    </div>
+  </div>
+
+  <!-- ENCABEZADO -->
+  <div class="menu-header">
+    <img src="logo.png" alt="Relax Café Logo" class="menu-logo" onerror="this.src='https://via.placeholder.com/150/4A3B32/FFFFFF?text=Relax+Caf%C3%A9'">
+    <h2 class="menu-brand-title">Relax Café</h2>
+    <div class="menu-subtitle">Menú de Especialidad</div>
+    <div class="menu-divider"></div>
+  </div>
+
+  <!-- CONTENEDOR DIGITAL (GRID DE TARJETAS EN PANTALLA) -->
+  <main class="menu-content">
+    <div id="categoriesGrid" class="categories-grid">
+      <!-- Carga dinámica por javascript -->
+    </div>
+  </main>
+
+  <!-- CONTENEDOR FÍSICO IMPRIMIBLE EXCLUSIVO (DOS COLUMNAS CON GUÍAS DE PUNTOS) -->
+  <div id="printLayout">
+    <div id="printColumns" class="print-columns">
+      <!-- Carga dinámica optimizada para papel -->
+    </div>
+  </div>
+
+  <!-- MODAL DIALOG PARA CREAR/EDITAR PLATILLOS -->
+  <dialog id="editDialog" closedby="any" aria-labelledby="dialogTitle" class="admin-dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h2 id="dialogTitle">Nuevo Platillo</h2>
+        <button id="btnDialogClose" class="btn-close-dialog">
+          <i data-lucide="x"></i>
+        </button>
+      </div>
+      <form id="dialogForm">
+        <input type="hidden" id="editItemId">
+        
+        <div class="form-group">
+          <label for="itemName">Nombre del Elemento</label>
+          <input type="text" id="itemName" class="form-control" placeholder="Ej. Desayuno Típico, Cappuccino" required>
+        </div>
+
+        <div class="form-group">
+          <label for="itemPrice">Precio (Q)</label>
+          <input type="number" id="itemPrice" class="form-control" placeholder="0.00" step="0.01" required min="0">
+        </div>
+
+        <div class="form-group">
+          <label for="itemCategory">Clasificación / Categoría</label>
+          <select id="itemCategory" class="form-control" required>
+            <option value="" disabled selected>Selecciona una opción</option>
+            <option value="DESAYUNOS Y CENAS">DESAYUNOS Y CENAS</option>
+            <option value="ALMUERZO">ALMUERZO</option>
+            <option value="SUB'S ITALIANOS">SUB'S ITALIANOS</option>
+            <option value="COMIDA DE TEMPORADA">COMIDA DE TEMPORADA</option>
+            <option value="BEBIDAS CALIENTES">BEBIDAS CALIENTES</option>
+            <option value="BEBIDAS FRÍAS">BEBIDAS FRÍAS</option>
+            <option value="BEBIDAS DE TEMPORADA">BEBIDAS DE TEMPORADA</option>
+            <option value="POSTRES">POSTRES</option>
+            <option value="REFACCIONES">REFACCIONES</option>
+            <option value="HELADOS">HELADOS</option>
+            <option value="HELADOS DE TEMPORADA">HELADOS DE TEMPORADA</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="subCategoryGroup" style="display: none;">
+          <label for="itemSubCategory">Subcategoría (Bebidas Frías)</label>
+          <select id="itemSubCategory" class="form-control">
+            <option value="" selected>General / Ninguna</option>
+            <option value="Con café">Con café</option>
+            <option value="Sodas Italianas">Sodas Italianas</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="itemDetails">Detalles / Descripción</label>
+          <textarea id="itemDetails" class="form-control" placeholder="Detalle de ingredientes, porción, etc."></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">
+          <i data-lucide="save"></i>
+          <span>Guardar Elemento</span>
+        </button>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- CONFIGURACIÓN DE FIREBASE Y LÓGICA -->
+  <script src="firebase-config.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+    // Cargar iconos de Lucide
+    lucide.createIcons();
+
+    // Elementos DOM
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const btnPrint = document.getElementById('btnPrint');
+    const categoriesGrid = document.getElementById('categoriesGrid');
+    const printColumns = document.getElementById('printColumns');
+    
+    // Elementos DOM de Edición
+    const btnEditToggle = document.getElementById('btnEditToggle');
+    const btnAddNewGlobal = document.getElementById('btnAddNewGlobal');
+    const editDialog = document.getElementById('editDialog');
+    const btnDialogClose = document.getElementById('btnDialogClose');
+    const dialogForm = document.getElementById('dialogForm');
+    const editItemIdInput = document.getElementById('editItemId');
+    const itemNameInput = document.getElementById('itemName');
+    const itemPriceInput = document.getElementById('itemPrice');
+    const itemCategoryInput = document.getElementById('itemCategory');
+    const subCategoryGroup = document.getElementById('subCategoryGroup');
+    const itemSubCategoryInput = document.getElementById('itemSubCategory');
+    const itemDetailsInput = document.getElementById('itemDetails');
+    const dialogTitle = document.getElementById('dialogTitle');
+
+    // Mapeo de iconos para cada categoría
+    const categoryIcons = {
+      "DESAYUNOS Y CENAS": "coffee",
+      "ALMUERZO": "utensils",
+      "SUB'S ITALIANOS": "sandwich",
+      "COMIDA DE TEMPORADA": "leaf",
+      "BEBIDAS CALIENTES": "cup-straw",
+      "BEBIDAS FRÍAS": "glass-water",
+      "BEBIDAS DE TEMPORADA": "sparkles",
+      "POSTRES": "cake",
+      "REFACCIONES": "cookie",
+      "HELADOS": "ice-cream",
+      "HELADOS DE TEMPORADA": "sun"
+    };
+
+    // Lista ordenada estricta de las categorías
+    const orderedCategories = [
+      "DESAYUNOS Y CENAS",
+      "ALMUERZO",
+      "SUB'S ITALIANOS",
+      "COMIDA DE TEMPORADA",
+      "BEBIDAS CALIENTES",
+      "BEBIDAS FRÍAS",
+      "BEBIDAS DE TEMPORADA",
+      "POSTRES",
+      "REFACCIONES",
+      "HELADOS",
+      "HELADOS DE TEMPORADA"
+    ];
+
+    let db;
+    let menuItems = [];
+    let isEditMode = false;
+    let isEditingItem = false;
+
+    // Cambiar estado de conexión
+    function setConnectionState(state, message) {
+      statusText.textContent = message;
+      if (state === 'connected') {
+        statusDot.className = 'status-dot connected';
+      } else if (state === 'error') {
+        statusDot.className = 'status-dot error';
+      } else {
+        statusDot.className = 'status-dot';
+      }
+    }
+
+    // Inicializar Firebase
+    try {
+      const config = window.CLOUD_CONFIG;
+      if (!config || !config.firebase) {
+        throw new Error("No se encontró la configuración.");
+      }
+
+      const app = initializeApp(config.firebase);
+      db = getFirestore(app);
+      const auth = getAuth(app);
+
+      signInAnonymously(auth)
+        .then(() => {
+          setConnectionState('connected', 'Conectado a la Nube');
+          startMenuListener();
+        })
+        .catch(err => {
+          setConnectionState('error', 'Error de Conexión: ' + err.message);
+        });
+
+    } catch (err) {
+      setConnectionState('error', 'Error de Configuración');
+    }
+
+    // Escuchar actualizaciones
+    function startMenuListener() {
+      onSnapshot(collection(db, "restaurant_web_menu"), (snapshot) => {
+        menuItems = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          // Unificación dinámica de categorías anteriores
+          if (data.category === 'DESAYUNO' || data.category === 'CENA') {
+            data.category = 'DESAYUNOS Y CENAS';
+          }
+          menuItems.push({ id: doc.id, ...data });
+        });
+
+        renderMenu();
+      }, (error) => {
+        setConnectionState('error', 'Error al leer datos');
+      });
+    }
+
+    // Renderizar menú
+    function renderMenu() {
+      categoriesGrid.innerHTML = '';
+      printColumns.innerHTML = '';
+
+      orderedCategories.forEach(categoryName => {
+        // Filtrar productos de esta categoría
+        const categoryItems = menuItems.filter(item => item.category === categoryName);
+        if (categoryItems.length === 0 && !isEditMode) return; // Ocultar vacías solo en modo público
+
+        // Ordenar por el orden manual y fallback alfabético
+        categoryItems.sort((a, b) => {
+          const orderA = a.order !== undefined ? a.order : 0;
+          const orderB = b.order !== undefined ? b.order : 0;
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+          return a.name.localeCompare(b.name);
+        });
+
+        // 1. RENDERIZAR EN PANTALLA (HTML Digital)
+        const iconName = categoryIcons[categoryName] || 'menu';
+        const card = document.createElement('div');
+        card.className = 'category-card';
+        
+        let productsHtml = '';
+        
+        const renderItemHtml = (item) => {
+          const dragHandle = isEditMode ? `<span class="drag-handle edit-only inline"><i data-lucide="grip-vertical" style="width: 16px; height: 16px; color: var(--text-muted);"></i></span>` : '';
+          const actionButtons = isEditMode ? `
+            <div class="product-actions edit-only inline">
+              <button class="btn-action move-up-btn" data-id="${item.id}" data-category="${categoryName}" title="Subir">
+                <i data-lucide="arrow-up" style="width: 14px; height: 14px;"></i>
+              </button>
+              <button class="btn-action move-down-btn" data-id="${item.id}" data-category="${categoryName}" title="Bajar">
+                <i data-lucide="arrow-down" style="width: 14px; height: 14px;"></i>
+              </button>
+              <button class="btn-action edit-btn" data-id="${item.id}" title="Editar">
+                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+              </button>
+              <button class="btn-action delete-btn" data-id="${item.id}" title="Eliminar">
+                <i data-lucide="trash-2" style="width: 14px; height: 14px; color: var(--danger);"></i>
+              </button>
+            </div>
+          ` : '';
+
+          return `
+            <div class="product-item" ${isEditMode ? 'draggable="true"' : ''} data-id="${item.id}">
+              <div class="product-header">
+                <div style="display: flex; align-items: center; flex-grow: 1;">
+                  ${dragHandle}
+                  <span class="product-name">${escapeHtml(item.name)}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span class="product-price">Q${parseFloat(item.price).toFixed(2)}</span>
+                  ${actionButtons}
+                </div>
+              </div>
+              ${item.details ? `<span class="product-desc" style="padding-left: ${isEditMode ? '24px' : '0'}; display: block;">${escapeHtml(item.details)}</span>` : ''}
+            </div>
+          `;
+        };
+
+        if (categoryName === 'BEBIDAS FRÍAS') {
+          // Agrupar por subcategoría: 'Con café', 'Sodas Italianas', y luego las generales
+          const subcategories = ['Con café', 'Sodas Italianas', ''];
+          subcategories.forEach(sub => {
+            const subItems = categoryItems.filter(item => (item.subcategory || '') === sub);
+            if (subItems.length > 0) {
+              const subTitle = sub ? sub : 'Otras Bebidas Frías';
+              productsHtml += `<h4 class="subcategory-title">${escapeHtml(subTitle)}</h4>`;
+              subItems.forEach(item => {
+                productsHtml += renderItemHtml(item);
+              });
+            }
+          });
+          
+          if (categoryItems.length === 0) {
+            productsHtml += `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1rem 0;">Vacío</div>`;
+          }
+        } else {
+          if (categoryItems.length > 0) {
+            categoryItems.forEach(item => {
+              productsHtml += renderItemHtml(item);
+            });
+          } else {
+            productsHtml += `<div style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1rem 0;">Vacío</div>`;
+          }
+        }
+
+        const addCategoryFooter = isEditMode ? `
+          <div class="category-card-footer edit-only flex-btn" style="margin-top: 1.2rem; border-top: 1px dashed var(--border-color); padding-top: 0.8rem;">
+            <button class="btn-add-item-category" data-category="${categoryName}">
+              <i data-lucide="plus-circle" style="width: 14px; height: 14px;"></i>
+              Agregar Platillo
+            </button>
+          </div>
+        ` : '';
+
+        card.innerHTML = `
+          <h3 class="category-title">
+            <i data-lucide="${iconName}"></i>
+            ${escapeHtml(categoryName)}
+          </h3>
+          <div class="products-list">
+            ${productsHtml}
+          </div>
+          ${addCategoryFooter}
+        `;
+        categoriesGrid.appendChild(card);
+
+        // 2. RENDERIZAR PARA IMPRESIÓN (Menú Físico)
+        if (categoryItems.length > 0) {
+          const printSection = document.createElement('div');
+          printSection.className = 'print-category-section';
+
+          let printProductsHtml = '';
+          if (categoryName === 'BEBIDAS FRÍAS') {
+            const subcategories = ['Con café', 'Sodas Italianas', ''];
+            subcategories.forEach(sub => {
+              const subItems = categoryItems.filter(item => (item.subcategory || '') === sub);
+              if (subItems.length > 0) {
+                const subTitle = sub ? sub : 'Otras Bebidas Frías';
+                printProductsHtml += `<h5 class="print-subcategory-title">${escapeHtml(subTitle)}</h5>`;
+                subItems.forEach(item => {
+                  printProductsHtml += `
+                    <div class="print-item">
+                      <div class="print-item-header">
+                        <span class="print-item-name">${escapeHtml(item.name)}</span>
+                        <span class="print-item-leader"></span>
+                        <span class="print-item-price">Q${parseFloat(item.price).toFixed(2)}</span>
+                      </div>
+                      ${item.details ? `<p class="print-item-desc">${escapeHtml(item.details)}</p>` : ''}
+                    </div>
+                  `;
+                });
+              }
+            });
+          } else {
+            categoryItems.forEach(item => {
+              printProductsHtml += `
+                <div class="print-item">
+                  <div class="print-item-header">
+                    <span class="print-item-name">${escapeHtml(item.name)}</span>
+                    <span class="print-item-leader"></span>
+                    <span class="print-item-price">Q${parseFloat(item.price).toFixed(2)}</span>
+                  </div>
+                  ${item.details ? `<p class="print-item-desc">${escapeHtml(item.details)}</p>` : ''}
+                </div>
+              `;
+            });
+          }
+
+          printSection.innerHTML = `
+            <h4 class="print-category-title">${escapeHtml(categoryName)}</h4>
+            <div class="print-items-list">
+              ${printProductsHtml}
+            </div>
+          `;
+          printColumns.appendChild(printSection);
+        }
+      });
+
+      // Adjuntar eventos de edición si está activo
+      if (isEditMode) {
+        attachEditEvents();
+      }
+
+      lucide.createIcons();
+    }
+
+    function attachEditEvents() {
+      // Eventos Drag & Drop
+      document.querySelectorAll('.product-item').forEach(itemEl => {
+        itemEl.addEventListener('dragstart', (e) => {
+          itemEl.classList.add('dragging');
+          e.dataTransfer.setData('text/plain', itemEl.getAttribute('data-id'));
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        itemEl.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          itemEl.style.backgroundColor = 'var(--accent-yellow-light)';
+        });
+        
+        itemEl.addEventListener('dragleave', () => {
+          itemEl.style.backgroundColor = '';
+        });
+        
+        itemEl.addEventListener('drop', async (e) => {
+          e.preventDefault();
+          itemEl.style.backgroundColor = '';
+          const draggedId = e.dataTransfer.getData('text/plain');
+          const targetId = itemEl.getAttribute('data-id');
+          
+          if (draggedId && targetId && draggedId !== targetId) {
+            const draggedItem = menuItems.find(i => i.id === draggedId);
+            const targetItem = menuItems.find(i => i.id === targetId);
+            
+            if (draggedItem && targetItem && draggedItem.category === targetItem.category) {
+              const categoryName = draggedItem.category;
+              const categoryItems = menuItems.filter(item => item.category === categoryName);
+              
+              categoryItems.sort((a, b) => {
+                const orderA = a.order !== undefined ? a.order : 0;
+                const orderB = b.order !== undefined ? b.order : 0;
+                if (orderA !== orderB) return orderA - orderB;
+                return a.name.localeCompare(b.name);
+              });
+              
+              const draggedIdx = categoryItems.findIndex(i => i.id === draggedId);
+              const targetIdx = categoryItems.findIndex(i => i.id === targetId);
+              
+              if (draggedIdx !== -1 && targetIdx !== -1) {
+                const [moved] = categoryItems.splice(draggedIdx, 1);
+                categoryItems.splice(targetIdx, 0, moved);
+                
+                await saveNewOrder(categoryItems);
+              }
+            }
+          }
+        });
+        
+        itemEl.addEventListener('dragend', () => {
+          itemEl.classList.remove('dragging');
+          document.querySelectorAll('.product-item').forEach(el => el.style.backgroundColor = '');
+        });
+      });
+
+      // Botón Subir
+      document.querySelectorAll('.move-up-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = btn.getAttribute('data-id');
+          const categoryName = btn.getAttribute('data-category');
+          const categoryItems = menuItems.filter(item => item.category === categoryName);
+          categoryItems.sort((a, b) => {
+            const orderA = a.order !== undefined ? a.order : 0;
+            const orderB = b.order !== undefined ? b.order : 0;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.name.localeCompare(b.name);
+          });
+          const idx = categoryItems.findIndex(i => i.id === id);
+          if (idx > 0) {
+            const temp = categoryItems[idx];
+            categoryItems[idx] = categoryItems[idx - 1];
+            categoryItems[idx - 1] = temp;
+            await saveNewOrder(categoryItems);
+          }
+        });
+      });
+
+      // Botón Bajar
+      document.querySelectorAll('.move-down-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          const id = btn.getAttribute('data-id');
+          const categoryName = btn.getAttribute('data-category');
+          const categoryItems = menuItems.filter(item => item.category === categoryName);
+          categoryItems.sort((a, b) => {
+            const orderA = a.order !== undefined ? a.order : 0;
+            const orderB = b.order !== undefined ? b.order : 0;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.name.localeCompare(b.name);
+          });
+          const idx = categoryItems.findIndex(i => i.id === id);
+          if (idx !== -1 && idx < categoryItems.length - 1) {
+            const temp = categoryItems[idx];
+            categoryItems[idx] = categoryItems[idx + 1];
+            categoryItems[idx + 1] = temp;
+            await saveNewOrder(categoryItems);
+          }
+        });
+      });
+
+      // Botón Editar
+      document.querySelectorAll('.edit-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = btn.getAttribute('data-id');
+          openEditModal(id);
+        });
+      });
+
+      // Botón Eliminar
+      document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = btn.getAttribute('data-id');
+          deleteItem(id);
+        });
+      });
+
+      // Botón Agregar por Categoría
+      document.querySelectorAll('.btn-add-item-category').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const category = btn.getAttribute('data-category');
+          openAddModal(category);
+        });
+      });
+    }
+
+    // Guardar nuevo orden en Firestore
+    async function saveNewOrder(itemsArray) {
+      setConnectionState('connected', 'Actualizando orden...');
+      try {
+        const updates = itemsArray.map((itm, idx) => {
+          const docRef = doc(db, "restaurant_web_menu", itm.id);
+          return updateDoc(docRef, { order: idx });
+        });
+        await Promise.all(updates);
+        setConnectionState('connected', 'Orden actualizado');
+      } catch (err) {
+        setConnectionState('error', 'Error al reordenar: ' + err.message);
+      }
+    }
+
+    function openAddModal(category = '') {
+      isEditingItem = false;
+      editItemIdInput.value = '';
+      itemNameInput.value = '';
+      itemPriceInput.value = '';
+      itemCategoryInput.value = category;
+      itemDetailsInput.value = '';
+      
+      if (category === 'BEBIDAS FRÍAS') {
+        subCategoryGroup.style.display = 'block';
+        itemSubCategoryInput.value = '';
+      } else {
+        subCategoryGroup.style.display = 'none';
+        itemSubCategoryInput.value = '';
+      }
+      
+      dialogTitle.textContent = "Nuevo Platillo";
+      editDialog.showModal();
+      lucide.createIcons();
+    }
+
+    function openEditModal(id) {
+      const item = menuItems.find(i => i.id === id);
+      if (!item) return;
+
+      isEditingItem = true;
+      editItemIdInput.value = item.id;
+      itemNameInput.value = item.name;
+      itemPriceInput.value = item.price;
+      itemCategoryInput.value = item.category;
+      itemDetailsInput.value = item.details || '';
+      
+      if (item.category === 'BEBIDAS FRÍAS') {
+        subCategoryGroup.style.display = 'block';
+        itemSubCategoryInput.value = item.subcategory || '';
+      } else {
+        subCategoryGroup.style.display = 'none';
+        itemSubCategoryInput.value = '';
+      }
+
+      dialogTitle.textContent = "Editar Platillo";
+      editDialog.showModal();
+      lucide.createIcons();
+    }
+
+    async function deleteItem(id) {
+      if (!confirm("¿Estás seguro de que deseas eliminar este platillo?")) return;
+      
+      setConnectionState('connected', 'Eliminando platillo...');
+      try {
+        const docRef = doc(db, "restaurant_web_menu", id);
+        await deleteDoc(docRef);
+        setConnectionState('connected', 'Platillo eliminado');
+      } catch (err) {
+        setConnectionState('error', 'Error al eliminar: ' + err.message);
+      }
+    }
+
+    // Cerrar modal
+    btnDialogClose.addEventListener('click', () => {
+      editDialog.close();
+    });
+
+    // Fallback de light-dismiss para navegadores sin soporte closedby (ej. Safari)
+    if (!('closedBy' in HTMLDialogElement.prototype)) {
+      editDialog.addEventListener('click', (event) => {
+        if (event.target !== editDialog) return;
+        const rect = editDialog.getBoundingClientRect();
+        const isDialogContent = (
+          rect.top <= event.clientY &&
+          event.clientY <= rect.top + rect.height &&
+          rect.left <= event.clientX &&
+          event.clientX <= rect.left + rect.width
+        );
+        if (!isDialogContent) {
+          editDialog.close();
+        }
+      });
+    }
+
+    // Toggle subcategoría al cambiar de categoría
+    itemCategoryInput.addEventListener('change', () => {
+      if (itemCategoryInput.value === 'BEBIDAS FRÍAS') {
+        subCategoryGroup.style.display = 'block';
+      } else {
+        subCategoryGroup.style.display = 'none';
+        itemSubCategoryInput.value = '';
+      }
+    });
+
+    // Guardar / Crear
+    dialogForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const name = itemNameInput.value.trim();
+      const price = parseFloat(itemPriceInput.value);
+      const category = itemCategoryInput.value;
+      const details = itemDetailsInput.value.trim();
+      const subcategory = category === 'BEBIDAS FRÍAS' ? itemSubCategoryInput.value || '' : '';
+
+      if (!name || isNaN(price) || !category) {
+        alert("Por favor rellene los campos obligatorios.");
+        return;
+      }
+
+      setConnectionState('connected', 'Guardando platillo...');
+      
+      const categoryItemsCount = menuItems.filter(i => i.category === category).length;
+      const itemData = {
+        name,
+        price,
+        category,
+        details,
+        subcategory,
+        timestamp: Date.now()
+      };
+
+      try {
+        if (isEditingItem) {
+          const id = editItemIdInput.value;
+          const currentItem = menuItems.find(i => i.id === id);
+          if (currentItem) {
+            if (currentItem.category !== category) {
+              itemData.order = categoryItemsCount;
+            } else {
+              itemData.order = currentItem.order !== undefined ? currentItem.order : 0;
+            }
+          }
+          const docRef = doc(db, "restaurant_web_menu", id);
+          await updateDoc(docRef, itemData);
+          setConnectionState('connected', 'Platillo actualizado');
+        } else {
+          itemData.order = categoryItemsCount;
+          const colRef = collection(db, "restaurant_web_menu");
+          await addDoc(colRef, itemData);
+          setConnectionState('connected', 'Platillo guardado');
+        }
+        editDialog.close();
+      } catch (err) {
+        setConnectionState('error', 'Error al guardar: ' + err.message);
+      }
+    });
+
+    // Botón Agregar Global
+    btnAddNewGlobal.addEventListener('click', () => {
+      openAddModal();
+    });
+
+    // Botón Toggle Editar Menú (Modo Administrador)
+    btnEditToggle.addEventListener('click', () => {
+      if (isEditMode) {
+        // Salir de modo edición
+        isEditMode = false;
+        document.body.classList.remove('edit-mode');
+        btnEditToggle.innerHTML = `<i data-lucide="lock"></i><span>Editar Menú</span>`;
+        lucide.createIcons();
+        renderMenu();
+      } else {
+        // Entrar a modo edición (pedir contraseña)
+        const pass = prompt("Ingrese la contraseña de administrador:");
+        if (pass === "relaxcafe") {
+          isEditMode = true;
+          document.body.classList.add('edit-mode');
+          btnEditToggle.innerHTML = `<i data-lucide="unlock"></i><span>Salir Edición</span>`;
+          lucide.createIcons();
+          renderMenu();
+        } else if (pass !== null) {
+          alert("Contraseña incorrecta.");
+        }
+      }
+    });
+
+    // Evento de impresión
+    btnPrint.addEventListener('click', () => {
+      window.print();
+    });
+
+    // Helper para escapar HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      };
+      return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+    }
+  </script>
+</body>
+</html>
